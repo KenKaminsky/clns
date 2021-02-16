@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import { useQuery } from 'react-query';
+import { Link } from 'react-router-dom';
 import Select from 'react-select';
 import {
   HorizontalGridLines,
@@ -10,11 +11,9 @@ import {
   YAxis,
 } from 'react-vis';
 import 'react-vis/dist/style.css';
-import { Flex, FlexCenter, Grid } from '../../styles';
 import useInsight from '../../hooks/useInsight';
-import { IOption } from '../../reducers/insightReducer';
+import { Flex, FlexCenter } from '../../styles';
 import { DataLayout, InsightButton } from './styles';
-import { Link } from 'react-router-dom';
 
 interface IData {
   [key: string]: string;
@@ -60,28 +59,22 @@ const Data = () => {
             });
             return acc;
           }, {});
-          console.log(res);
           return res;
         }),
   );
 
-  useEffect(() => {
-    if (!data) return;
-
-    // console.log(data);
-  }, [data]);
-
   const handleSelectChange = useCallback(
     (selectedOption) => {
       changeSeries(selectedOption);
-      console.log(`Option selected:`, selectedOption);
     },
     [changeSeries],
   );
 
   return (
     <>
-      <h1>Data</h1>
+      <FlexCenter>
+        <h1>Data</h1>
+      </FlexCenter>
       <FlexCenter>
         {optionsLoading ? (
           <p>Loading...</p>

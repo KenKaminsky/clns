@@ -5,7 +5,7 @@ import { Link, useParams } from 'react-router-dom';
 import Select from 'react-select';
 import {
   HorizontalGridLines,
-  LineSeries,
+  VerticalBarSeries,
   VerticalGridLines,
   XAxis,
   XYPlot,
@@ -13,7 +13,7 @@ import {
 } from 'react-vis';
 import 'react-vis/dist/style.css';
 import useInsight from '../../hooks/useInsight';
-import { Flex, FlexCenter } from '../../styles';
+import { colors, Flex, FlexCenter, Grid } from '../../styles';
 import { PredictLayout } from './styles';
 
 export interface RouterParams {
@@ -61,50 +61,69 @@ const Insight = () => {
 
   const { state, changeSeries } = useInsight();
 
-  const { isLoading, error, data } = useQuery('prediction', () =>
+  const { isLoading, error, data } = useQuery<IPrediction>('prediction', () =>
     fetch(`http://localhost:3001/predict?target=${series || 'example.D2'}`)
       .then((res) => res.json())
-      .then((data) => data.map((d: string) => ({ value: d, label: d }))),
+      .then((data) => {
+        return {
+          ...data,
+          predictions: data.predictions.map((d: string, i: number) => ({
+            x: i,
+            y: !d ? null : parseFloat(d),
+            color: 'white',
+          })),
+        };
+      }),
   );
 
-  //localhost:3001/predict?target=example.D1
-
-  //http: console.log(state.series);
   return (
-    <div>
+    <>
       <FlexCenter>
-        <h1>Insight</h1>
+        <h1>Predictions</h1>
         <div>{JSON.stringify(state.series)}</div>
         <div>{series}</div>
       </FlexCenter>
       <FlexCenter>
         {
           <PredictLayout cols={2} rows={1}>
-            <Flex>
+            <FlexCenter>
+              <h2>Model Summary</h2>
+              <Grid cols={2} rows={8}>
+                {data &&
+                  Object.entries(data.modelSummary).map(([key, val]) => (
+                    <>
+                      <label>{key}</label>
+                      <div>{val}</div>
+                    </>
+                  ))}
+              </Grid>
+            </FlexCenter>
+            <FlexCenter>
               {isLoading ? (
                 <p>Loading...</p>
               ) : error ? (
                 <p>Oooops... Something went wrong</p>
               ) : data ? (
-                <XYPlot xType='time' width={1000} height={300}>
+                <XYPlot width={1000} height={300}>
                   <HorizontalGridLines />
                   <VerticalGridLines />
                   <XAxis title='X Axis' />
                   <YAxis title='Y Axis' />
-                  <LineSeries
-                    getNull={(d) => d.y !== null}
+                  <VerticalBarSeries
+                    barWidth={5}
+                    color={colors.primary}
                     // @ts-ignore
-                    data={data[state?.series?.value || options[1].value]}
+                    data={data.predictions}
                   />
                 </XYPlot>
               ) : (
                 ''
               )}
-            </Flex>
+            </FlexCenter>
           </PredictLayout>
         }
       </FlexCenter>
-    </div>
+    </>
   );
 };
 
